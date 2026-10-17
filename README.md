@@ -8,7 +8,7 @@ A classic **Snake game** built in Python using the **Pygame** library. The game 
 
 | Main Menu | Level Settings | Gameplay & Highscore |
 | :---: | :---: | :---: |
-| ![Main Menu](https://github.com/Flockemon24/snake/docs/menu.png) | ![Settings](https://github.com/Flockemon24/snake/docs/settings.png) | ![Gameplay](https://github.com/Flockemon24/snake/docs/gameplay.png) |
+| ![Main Menu](/docs/menu.png) | ![Settings](/docs/settings.png) | ![Gameplay](/docs/gameplay.png) |
 | *Start Screen* | *Difficulty Levels (1-3)* | *Action & Live Score/Highscore* |
 
 
