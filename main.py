@@ -1,8 +1,26 @@
 import pygame
 import random
+import os
 
 # Init pygame
 pygame.init()
+
+HIGHSCORE_FILE = "highscore.txt"
+
+def load_highscore():
+    """Loads the highscore from the file"""
+    if os.path.exists(HIGHSCORE_FILE):
+        try:
+            with open(HIGHSCORE_FILE, "r") as file:
+                return int(file.read().strip())
+        except ValueError:
+            return 0
+    return 0
+
+def save_highscore(new_highscore):
+    """Saves highscore in the file"""
+    with open(HIGHSCORE_FILE, "w") as file:
+        file.write(str(new_highscore))
 
 def draw_square(column, row, color):
     screen_x = column * SQUARE_SIZE
@@ -13,25 +31,43 @@ def draw_game_over():
     """Draws Game Over Screen"""
     screen.fill(BLACK)
     title_text = font_large.render("GAME OVER", True, RED)
-    title_rect = title_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 - 50))
+    title_rect = title_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 - 80))
 
-    restart_text = font_small.render("Press SPACE to try again or M for menu", True, WHITE)
-    restart_rect = restart_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 + 50))
+    # Score & Highscore anzeigen
+    score_text = font_small.render(f"Your Score: {score}", True, WHITE)
+    score_rect = score_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 - 10))
+
+    highscore_text = font_small.render(f"Highscore: {highscore}", True, (255, 215, 0)) # Goldene Farbe
+    highscore_rect = highscore_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 + 30))
+
+    restart_text = font_small.render("Press SPACE to try again or M for menu", True, (180, 180, 180))
+    restart_rect = restart_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 + 100))
 
     screen.blit(title_text, title_rect)
+    screen.blit(score_text, score_rect)
+    screen.blit(highscore_text, highscore_rect)
     screen.blit(restart_text, restart_rect)
 
 def draw_menu():
     """Draws Menu Screen"""
     screen.fill(BLACK)
     title_text = font_large.render("SNAKE", True, WHITE)
-    title_rect = title_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 - 50))
+    title_rect = title_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 - 100))
 
-    start_text = font_small.render("Press SPACE to start or S for settings", True, WHITE)
-    start_rect = start_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 + 50))
+    # Highscore im Menü anzeigen
+    menu_hs_text = font_small.render(f"Current Highscore: {highscore}", True, (255, 215, 0))
+    menu_hs_rect = menu_hs_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 - 30))
+
+    start_text = font_small.render("Press SPACE to start", True, WHITE)
+    start_rect = start_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 + 30))
+
+    settings_text = font_small.render("Press S for Settings (Level Select)", True, (150, 150, 150))
+    settings_rect = settings_text.get_rect(center=(WIN_SIZE // 2, WIN_SIZE // 2 + 80))
 
     screen.blit(title_text, title_rect)
+    screen.blit(menu_hs_text, menu_hs_rect)
     screen.blit(start_text, start_rect)
+    screen.blit(settings_text, settings_rect)
 
 def draw_settings():
     """Draws Settings / Level Selection Screen"""
@@ -59,7 +95,7 @@ def draw_settings():
 
 def reset_game():
     """Resets the variables to default"""
-    global game_state, head_column, head_row, snake_length, body_parts, step_x, step_y, apple_row, apple_column
+    global game_state, head_column, head_row, snake_length, body_parts, step_x, step_y, score, apple_row, apple_column
     game_state = "PLAYING"
     head_column = SQUARE_COUNT // 2
     head_row = SQUARE_COUNT //  2
@@ -67,6 +103,7 @@ def reset_game():
     body_parts = []
     step_x = 0
     step_y = 0
+    score = 0
     apple_row = random.randint(0, SQUARE_COUNT-1)
     apple_column = random.randint(0, SQUARE_COUNT-1)
 
@@ -82,6 +119,10 @@ WHITE = (255, 255, 255)
 RED = (200, 0, 0)
 font_large = pygame.font.SysFont("Arial", 64)
 font_small = pygame.font.SysFont("Arial", 32)
+
+# Highscore
+highscore = load_highscore()
+score = 0
 
 # Game States: "PLAYING", "GAMEOVER", "MENU", "SETTINGS"
 game_state = "MENU"
@@ -161,6 +202,10 @@ while run:
 
         if head_column == apple_column and head_row == apple_row:
             snake_length += 1
+            score += 1
+            if score > highscore:
+                highscore = score
+                save_highscore(highscore)
             apple_row = random.randint(0, SQUARE_COUNT-1)
             apple_column = random.randint(0, SQUARE_COUNT-1)
 
@@ -189,6 +234,10 @@ while run:
             line_pos = SQUARE_SIZE * i
             pygame.draw.line(screen, (255, 255, 255), (line_pos, 0), (line_pos, WIN_SIZE), 2)
             pygame.draw.line(screen, (255, 255, 255), (0, line_pos), (WIN_SIZE, line_pos), 2)
+            
+        # Live Score
+        live_score_text = font_small.render(f"Score: {score}  Best: {highscore}", True, (255, 215, 0))
+        screen.blit(live_score_text, (15, 15))
 
     elif game_state == "GAMEOVER":
         draw_game_over()
