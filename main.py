@@ -1,6 +1,7 @@
 import pygame
 import random
 import os
+import asyncio
 
 # Init pygame
 pygame.init()
@@ -140,114 +141,119 @@ step_y = 0
 apple_row = random.randint(0, SQUARE_COUNT-1)
 apple_column = random.randint(0, SQUARE_COUNT-1)
 
-run = True
-while run:
-    pygame.time.delay(DELAY)
+async def main():
+    global run, DELAY, game_state, head_column, head_row, snake_length, body_parts, step_x, step_y, apple_row, apple_column, score, highscore
 
-    # Events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
+    run = True
+    while run:
+        pygame.time.delay(DELAY)
 
-        elif event.type == pygame.KEYDOWN:
-            if game_state == "GAMEOVER": 
-                if event.key == pygame.K_SPACE:
-                    reset_game()
-                elif event.key == pygame.K_m:
-                    game_state = "MENU"
+        # Events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
 
-            elif game_state == "MENU":
-                if event.key == pygame.K_SPACE:
-                    reset_game()
-                elif event.key == pygame.K_s:
-                    game_state = "SETTINGS"
+            elif event.type == pygame.KEYDOWN:
+                if game_state == "GAMEOVER": 
+                    if event.key == pygame.K_SPACE:
+                        reset_game()
+                    elif event.key == pygame.K_m:
+                        game_state = "MENU"
 
-            elif game_state == "SETTINGS":
-                if event.key == pygame.K_1:
-                    DELAY = 160 
-                elif event.key == pygame.K_2:
-                    DELAY = 100
-                elif event.key == pygame.K_3:
-                    DELAY = 50
-                elif event.key == pygame.K_m:
-                    game_state = "MENU"
+                elif game_state == "MENU":
+                    if event.key == pygame.K_SPACE:
+                        reset_game()
+                    elif event.key == pygame.K_s:
+                        game_state = "SETTINGS"
 
-    if game_state == "PLAYING":
-        # User-Input
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_RIGHT]:
-            if step_x != -1:
-                step_x = 1
-                step_y = 0
-        elif keys[pygame.K_LEFT]:
-            if step_x != 1:
-                step_x = -1
-                step_y = 0
-        elif keys[pygame.K_DOWN]:
-            if step_y != -1:
-                step_x = 0
-                step_y = 1
-        elif keys[pygame.K_UP]:
-            if step_y != 1:
-                step_x = 0
-                step_y = -1
+                elif game_state == "SETTINGS":
+                    if event.key == pygame.K_1:
+                        DELAY = 160 
+                    elif event.key == pygame.K_2:
+                        DELAY = 100
+                    elif event.key == pygame.K_3:
+                        DELAY = 50
+                    elif event.key == pygame.K_m:
+                        game_state = "MENU"
 
-        if step_x != 0 or step_y != 0:
-            body_parts.append((head_column, head_row))
-            if len(body_parts) >= snake_length:
-                body_parts.pop(0)
+        if game_state == "PLAYING":
+            # User-Input
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RIGHT]:
+                if step_x != -1:
+                    step_x = 1
+                    step_y = 0
+            elif keys[pygame.K_LEFT]:
+                if step_x != 1:
+                    step_x = -1
+                    step_y = 0
+            elif keys[pygame.K_DOWN]:
+                if step_y != -1:
+                    step_x = 0
+                    step_y = 1
+            elif keys[pygame.K_UP]:
+                if step_y != 1:
+                    step_x = 0
+                    step_y = -1
 
-        head_column += step_x
-        head_row += step_y
+            if step_x != 0 or step_y != 0:
+                body_parts.append((head_column, head_row))
+                if len(body_parts) >= snake_length:
+                    body_parts.pop(0)
 
-        if head_column == apple_column and head_row == apple_row:
-            snake_length += 1
-            score += 1
-            if score > highscore:
-                highscore = score
-                save_highscore(highscore)
-            apple_row = random.randint(0, SQUARE_COUNT-1)
-            apple_column = random.randint(0, SQUARE_COUNT-1)
+            head_column += step_x
+            head_row += step_y
 
-        # Checking lose
-        vertical_border_hit = head_column < 0 or head_column >= SQUARE_COUNT
-        horizontal_border_hit = head_row < 0 or head_row >= SQUARE_COUNT
-        self_hit = (head_column, head_row) in body_parts
+            if head_column == apple_column and head_row == apple_row:
+                snake_length += 1
+                score += 1
+                if score > highscore:
+                    highscore = score
+                    save_highscore(highscore)
+                apple_row = random.randint(0, SQUARE_COUNT-1)
+                apple_column = random.randint(0, SQUARE_COUNT-1)
 
-        if vertical_border_hit or horizontal_border_hit or self_hit:
-            game_state = "GAMEOVER"
+            # Checking lose
+            vertical_border_hit = head_column < 0 or head_column >= SQUARE_COUNT
+            horizontal_border_hit = head_row < 0 or head_row >= SQUARE_COUNT
+            self_hit = (head_column, head_row) in body_parts
 
-        screen.fill((0, 0, 0))
+            if vertical_border_hit or horizontal_border_hit or self_hit:
+                game_state = "GAMEOVER"
 
-        # Draw Snake
-        draw_square(head_column, head_row, (0, 255, 0))
+            screen.fill((0, 0, 0))
 
-        for part in body_parts:
-            part_column = part[0]
-            part_row = part[1]
-            draw_square(part_column, part_row, (0, 255, 0))
+            # Draw Snake
+            draw_square(head_column, head_row, (0, 255, 0))
 
-        # Draw Apple
-        draw_square(apple_column, apple_row, (255, 0, 0))
+            for part in body_parts:
+                part_column = part[0]
+                part_row = part[1]
+                draw_square(part_column, part_row, (0, 255, 0))
 
-        for i in range(SQUARE_COUNT):
-            line_pos = SQUARE_SIZE * i
-            pygame.draw.line(screen, (255, 255, 255), (line_pos, 0), (line_pos, WIN_SIZE), 2)
-            pygame.draw.line(screen, (255, 255, 255), (0, line_pos), (WIN_SIZE, line_pos), 2)
-            
-        # Live Score
-        live_score_text = font_small.render(f"Score: {score}  Best: {highscore}", True, (255, 215, 0))
-        screen.blit(live_score_text, (15, 15))
+            # Draw Apple
+            draw_square(apple_column, apple_row, (255, 0, 0))
 
-    elif game_state == "GAMEOVER":
-        draw_game_over()
+            for i in range(SQUARE_COUNT):
+                line_pos = SQUARE_SIZE * i
+                pygame.draw.line(screen, (255, 255, 255), (line_pos, 0), (line_pos, WIN_SIZE), 2)
+                pygame.draw.line(screen, (255, 255, 255), (0, line_pos), (WIN_SIZE, line_pos), 2)
+                
+            # Live Score
+            live_score_text = font_small.render(f"Score: {score}  Best: {highscore}", True, (255, 215, 0))
+            screen.blit(live_score_text, (15, 15))
 
-    elif game_state == "MENU":
-        draw_menu()
+        elif game_state == "GAMEOVER":
+            draw_game_over()
 
-    elif game_state == "SETTINGS":
-        draw_settings()
+        elif game_state == "MENU":
+            draw_menu()
 
-    pygame.display.update()
+        elif game_state == "SETTINGS":
+            draw_settings()
 
-pygame.display.quit()
+        pygame.display.update()
+        await asyncio.sleep(0)  # Allow other tasks to run
+    pygame.display.quit()
+
+asyncio.run(main())
